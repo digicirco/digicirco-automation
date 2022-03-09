@@ -1,0 +1,344 @@
+{
+  "name": "order to shipment ofn logcica",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        100,
+        310
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items[0].json.orders.map(item => {\n  return {\n    json: item\n  }\n})\n"
+      },
+      "name": "Map list",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        620,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        }
+      },
+      "name": "Time trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        100,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "sheetId": "14UW1VPd6AMLknrcV-nzJyN82QdZBuwDYFvq5y40si_w",
+        "range": "order-to-shipment-ofn-purplship!A:B",
+        "options": {}
+      },
+      "name": "Get subscriptions",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        280,
+        220
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "3",
+          "name": "Digicirco Google"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "url": "http://localhost:3001/api/v0/orders",
+        "options": {
+          "splitIntoItems": false
+        },
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "q[created_at_gt]",
+              "value": "={{new Date(new Date().setDate(new Date().getDate()-1)).toISOString().slice(0, 10)}}"
+            },
+            {
+              "name": "q[distributor_id_eq]",
+              "value": "={{$json[\"enterpriseId\"]}}"
+            },
+            {
+              "name": "q[state_eq]",
+              "value": "complete"
+            }
+          ]
+        }
+      },
+      "name": "Get orders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        450,
+        220
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "4",
+          "name": "OFN api key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "url": "=http://localhost:3001/api/v0/orders/{{$json[\"number\"]}}",
+        "options": {}
+      },
+      "name": "Get order",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1260,
+        270
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "4",
+          "name": "OFN api key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "channel": "logcica-bot-test",
+        "text": "=Order {{$json[\"number\"]}} to ship to {{$json[\"ship_address\"][\"firstname\"]}} {{$json[\"ship_address\"][\"lastname\"]}} at {{$json[\"ship_address\"][\"address1\"]}} {{$json[\"ship_address\"][\"address2\"]}} in {{$json[\"ship_address\"][\"city\"]}}. Update the order at http://ofn.localhost{{$json[\"edit_path\"]}} <https://maps.google.com/?q={{$json[\"ship_address\"][\"city\"]}}\n|GO>",
+        "jsonParameters": true,
+        "attachments": [],
+        "otherOptions": {},
+        "blocksJson": "=[\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \"[OFN] Nouvelle commande {{$json[\"number\"]}}\"\n\t\t\t},\n\t\t\t\"accessory\": {\n\t\t\t\t\"type\": \"button\",\n\t\t\t\t\"text\": {\n\t\t\t\t\t\"type\": \"plain_text\",\n\t\t\t\t\t\"text\": \"Voir\",\n\t\t\t\t\t\"emoji\": true\n\t\t\t\t},\n\t\t\t\t\"value\": \"click_me_123\",\n\t\t\t\t\"url\": \"http://ofn.localhost/admin/orders/{{$json[\"number\"]}}/edit\",\n\t\t\t\t\"action_id\": \"button-action\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"block_id\": \"section789\",\n\t\t\t\"fields\": [\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\t\"text\": \"*Client*\\n{{$json[\"full_name\"]}}\"\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\t\"text\": \"*Adresse*\\n{{$json[\"ship_address\"][\"address1\"]}}\\n{{$json[\"ship_address\"][\"address2\"]}}\\n{{$json[\"ship_address\"][\"city\"]}}\"\n\t\t\t\t}\n\t\t\t]\n\t\t},\n\t\t{\n\t\t\t\"type\": \"actions\",\n\t\t\t\"elements\": [\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"button\",\n\t\t\t\t\t\"text\": {\n\t\t\t\t\t\t\"type\": \"plain_text\",\n\t\t\t\t\t\t\"text\": \"Envoyée\"\n\t\t\t\t\t},\n\t\t\t\t\t\"style\": \"primary\",\n\t\t\t\t\t\"value\": \"click_me_456\"\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"button\",\n\t\t\t\t\t\"text\": {\n\t\t\t\t\t\t\"type\": \"plain_text\",\n\t\t\t\t\t\t\"text\": \"Maps\"\n\t\t\t\t\t},\n\t\t\t\t\t\"url\": \"https://maps.google.com/?q={{$json[\"ship_address\"][\"mapsSearchQuery\"]}}\"\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t]"
+      },
+      "name": "Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        1570,
+        270
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "7",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const a = item.ship_address\nitem.ship_address.mapsSearchQuery = encodeURI(`${a.address1},${a.address2},${a.city},${a.state_name},${a.country_name}`);\nreturn item;"
+      },
+      "name": "Enrich",
+      "type": "n8n-nodes-base.functionItem",
+      "typeVersion": 1,
+      "position": [
+        1420,
+        270
+      ]
+    },
+    {
+      "parameters": {
+        "sheetId": "1mP7r4GhvB5TLV8KLtdKi7LW21wk2fL0IRrA2V1uc3Is",
+        "range": "orders!A:A",
+        "options": {}
+      },
+      "name": "Latest orders",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        620,
+        400
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "3",
+          "name": "Digicirco Google"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "removeKeyMatches",
+        "propertyName1": "number",
+        "propertyName2": "number"
+      },
+      "name": "Keep new",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 1,
+      "position": [
+        780,
+        270
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const newItem = {\n  number: item.number,\n  createdTime: new Date().toISOString()\n}\n\nreturn newItem;"
+      },
+      "name": "Latest order",
+      "type": "n8n-nodes-base.functionItem",
+      "typeVersion": 1,
+      "position": [
+        940,
+        270
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "1mP7r4GhvB5TLV8KLtdKi7LW21wk2fL0IRrA2V1uc3Is",
+        "range": "orders!A:B",
+        "options": {
+          "valueInputMode": "RAW"
+        }
+      },
+      "name": "Append to latest orders",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        270
+      ],
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleApi": {
+          "id": "3",
+          "name": "Digicirco Google"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Time trigger": {
+      "main": [
+        [
+          {
+            "node": "Get subscriptions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get subscriptions": {
+      "main": [
+        [
+          {
+            "node": "Get orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get order": {
+      "main": [
+        [
+          {
+            "node": "Enrich",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich": {
+      "main": [
+        [
+          {
+            "node": "Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Latest orders": {
+      "main": [
+        [
+          {
+            "node": "Keep new",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get orders": {
+      "main": [
+        [
+          {
+            "node": "Map list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map list": {
+      "main": [
+        [
+          {
+            "node": "Keep new",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keep new": {
+      "main": [
+        [
+          {
+            "node": "Latest order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Latest order": {
+      "main": [
+        [
+          {
+            "node": "Append to latest orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append to latest orders": {
+      "main": [
+        [
+          {
+            "node": "Get order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "id": 5
+}
