@@ -64,7 +64,7 @@
     {
       "parameters": {
         "authentication": "headerAuth",
-        "url": "http://localhost:3001/api/v0/orders",
+        "url": "https://openfoodnetwork.be/api/v0/orders",
         "options": {
           "splitIntoItems": false
         },
@@ -94,15 +94,15 @@
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "4",
-          "name": "OFN api key"
+          "id": "8",
+          "name": "ofn be demo account"
         }
       }
     },
     {
       "parameters": {
         "authentication": "headerAuth",
-        "url": "=http://localhost:3001/api/v0/orders/{{$json[\"number\"]}}",
+        "url": "=https://openfoodnetwork.be/api/v0/orders/{{$json[\"number\"]}}",
         "options": {}
       },
       "name": "Get order",
@@ -114,19 +114,22 @@
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "4",
-          "name": "OFN api key"
+          "id": "8",
+          "name": "ofn be demo account"
         }
       }
     },
     {
       "parameters": {
         "channel": "logcica-bot-test",
-        "text": "=Order {{$json[\"number\"]}} to ship to {{$json[\"ship_address\"][\"firstname\"]}} {{$json[\"ship_address\"][\"lastname\"]}} at {{$json[\"ship_address\"][\"address1\"]}} {{$json[\"ship_address\"][\"address2\"]}} in {{$json[\"ship_address\"][\"city\"]}}. Update the order at http://ofn.localhost{{$json[\"edit_path\"]}} <https://maps.google.com/?q={{$json[\"ship_address\"][\"city\"]}}\n|GO>",
+        "text": "=",
         "jsonParameters": true,
         "attachments": [],
-        "otherOptions": {},
-        "blocksJson": "=[\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \"[OFN] Nouvelle commande {{$json[\"number\"]}}\"\n\t\t\t},\n\t\t\t\"accessory\": {\n\t\t\t\t\"type\": \"button\",\n\t\t\t\t\"text\": {\n\t\t\t\t\t\"type\": \"plain_text\",\n\t\t\t\t\t\"text\": \"Voir\",\n\t\t\t\t\t\"emoji\": true\n\t\t\t\t},\n\t\t\t\t\"value\": \"click_me_123\",\n\t\t\t\t\"url\": \"http://ofn.localhost/admin/orders/{{$json[\"number\"]}}/edit\",\n\t\t\t\t\"action_id\": \"button-action\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"block_id\": \"section789\",\n\t\t\t\"fields\": [\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\t\"text\": \"*Client*\\n{{$json[\"full_name\"]}}\"\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\t\"text\": \"*Adresse*\\n{{$json[\"ship_address\"][\"address1\"]}}\\n{{$json[\"ship_address\"][\"address2\"]}}\\n{{$json[\"ship_address\"][\"city\"]}}\"\n\t\t\t\t}\n\t\t\t]\n\t\t},\n\t\t{\n\t\t\t\"type\": \"actions\",\n\t\t\t\"elements\": [\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"button\",\n\t\t\t\t\t\"text\": {\n\t\t\t\t\t\t\"type\": \"plain_text\",\n\t\t\t\t\t\t\"text\": \"Envoyée\"\n\t\t\t\t\t},\n\t\t\t\t\t\"style\": \"primary\",\n\t\t\t\t\t\"value\": \"click_me_456\"\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"button\",\n\t\t\t\t\t\"text\": {\n\t\t\t\t\t\t\"type\": \"plain_text\",\n\t\t\t\t\t\t\"text\": \"Maps\"\n\t\t\t\t\t},\n\t\t\t\t\t\"url\": \"https://maps.google.com/?q={{$json[\"ship_address\"][\"mapsSearchQuery\"]}}\"\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t]"
+        "otherOptions": {
+          "unfurl_links": true,
+          "unfurl_media": true
+        },
+        "blocksJson": "=[\n    {\n        \"type\": \"divider\"\n    },\n    {\n        \"type\": \"section\",\n        \"text\": {\n            \"type\": \"mrkdwn\",\n            \"text\": \"*Commande* <https://openfoodnetwork.be/admin/orders/{{$json[\"number\"]}}/edit|{{$json[\"number\"]}}> pour {{$json[\"distributor_name\"]}} via OFN\"\n        }\n    },\n    {\n        \"type\": \"context\",\n        \"elements\": [\n            {\n                \"type\": \"mrkdwn\",\n                \"text\": \"*Livraison :* {{$json[\"shipping_method\"][\"name\"]}}\\n\"\n            },\n            {\n                \"type\": \"mrkdwn\",\n                \"text\": \"*Destination :* {{$json[\"full_name\"]}}, <https://maps.google.com/?q={{$json[\"ship_address\"][\"mapsSearchQuery\"]}}|{{$json[\"ship_address\"][\"address1\"]}}, {{$json[\"ship_address\"][\"address2\"]}}, {{$json[\"ship_address\"][\"zipcode\"]}} {{$json[\"ship_address\"][\"city\"]}}>\\n\"\n            },\n            {\n                \"type\": \"mrkdwn\",\n                \"text\": \"*Instructions :* {{$json[\"special_instructions\"]}}\"\n            }\n        ]\n    }\n]"
       },
       "name": "Slack",
       "type": "n8n-nodes-base.slack",
